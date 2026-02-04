@@ -128,29 +128,33 @@ npm --version 2>$null | Out-Host
 Section "Python via uv (includes Python management)"
 # Official uv PowerShell install: https://docs.astral.sh/uv/getting-started/installation/
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-Need uv
+RefreshPath
+Need "uv" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 uv --version 2>$null | Out-Host
 uv python install 3.12
 uv python pin 3.12
-Need python
+Need "python" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 python --version 2>$null | Out-Host
 
 Section "Bun"
 # Official Bun PowerShell install: https://bun.com/docs/installation
 powershell -c "irm bun.sh/install.ps1 | iex"
-Need bun
+RefreshPath
+Need "bun" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 bun --version 2>$null | Out-Host
 
 Section "Claude Code"
 # Official setup docs: https://code.claude.com/docs/en/setup
 irm https://claude.ai/install.ps1 | iex
-Need claude
+RefreshPath
+Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 claude --version 2>$null | Out-Host
 
 Section "Codex CLI"
 # Official Codex CLI docs: https://developers.openai.com/codex/cli
 npm install -g @openai/codex
-Need codex
+RefreshPath
+Need "codex" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 codex --version 2>$null | Out-Host
 
 if (-not $SkipWSL) {
@@ -168,7 +172,12 @@ if (-not $SkipWSL) {
 }
 
 Section "Finish"
-Write-Host "Open a NEW PowerShell window so profile changes load."
-Write-Host "Then run:"
-Write-Host " - claude (sign in / authenticate) https://code.claude.com/docs/en/setup"
-Write-Host " - codex (sign in / authenticate) https://developers.openai.com/codex/cli"
+Write-Host "[OK] All install steps completed."
+Write-Host "Open a NEW PowerShell window so PATH/profile changes load."
+Write-Host "Then verify and authenticate if needed:"
+Write-Host " - node --version"
+Write-Host " - npm --version"
+Write-Host " - python --version"
+Write-Host " - bun --version"
+Write-Host " - claude --version (sign in / authenticate) https://code.claude.com/docs/en/setup"
+Write-Host " - codex --version (sign in / authenticate) https://developers.openai.com/codex/cli"
