@@ -44,8 +44,11 @@ function EnsureAdminForWSL {
   exit 0
 }
 
-function Need([string]$name) {
+function Need([string]$name, [string]$hint = $null) {
   if (-not (Get-Command $name -ErrorAction SilentlyContinue)) {
+    if ($hint) {
+      throw "Missing command: $name. $hint"
+    }
     throw "Missing command: $name"
   }
 }
@@ -53,6 +56,18 @@ function Need([string]$name) {
 function EnsureWinget {
   if (Get-Command winget -ErrorAction SilentlyContinue) { return }
   throw "winget not found. Install 'App Installer' from Microsoft Store, then rerun. https://learn.microsoft.com/en-us/windows/package-manager/winget/"
+}
+
+function RefreshPath {
+  $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+  $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+  if ($machinePath -and $userPath) {
+    $env:Path = "$machinePath;$userPath"
+  } elseif ($machinePath) {
+    $env:Path = $machinePath
+  } elseif ($userPath) {
+    $env:Path = $userPath
+  }
 }
 
 function WinGetInstall([string]$id) {
@@ -84,6 +99,16 @@ WinGetInstall "cURL.cURL"
 
 Section "Node via fnm + npm"
 WinGetInstall "Schniz.fnm"
+RefreshPath
+
+if (-not (Get-Command fnm -ErrorAction SilentlyContinue)) {
+  $fnmPath = Join-Path $env:LOCALAPPDATA "fnm\fnm.exe"
+  if (Test-Path $fnmPath) {
+    $env:Path = "$env:Path;$((Split-Path -Parent $fnmPath))"
+  }
+}
+
+Need "fnm" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 EnsureProfileSnippet "dev-bootstrap: fnm" @'
 # ---- dev-bootstrap: fnm ----
 if (Get-Command fnm -ErrorAction SilentlyContinue) {
