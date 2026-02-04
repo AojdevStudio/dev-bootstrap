@@ -42,11 +42,11 @@ Every tool has its own installer. Its own docs. Its own "getting started" page. 
 
 <br>
 
-[![Watch the clip](https://img.youtube.com/vi/Yb9IyTOh0xg/maxresdefault.jpg)](https://www.youtube.com/watch?v=Yb9IyTOh0xg&t=511s)
+https://github.com/user-attachments/assets/f310b640-4eae-40da-81cb-0cdeffa8770d
 
-> **[Watch on YouTube at 8:31](https://www.youtube.com/watch?v=Yb9IyTOh0xg&t=511s)** — From the [How I AI podcast](https://www.lennysnewsletter.com/p/this-week-on-how-i-ai-automate-the) featuring Vercel CEO Guillermo Rauch. Claire Vo describes exactly the problem: even experienced tech professionals struggle to get a basic development environment running. Guillermo's response? *"It's nightmare fuel."*
+> From the [How I AI podcast](https://www.lennysnewsletter.com/p/this-week-on-how-i-ai-automate-the) featuring Vercel CEO Guillermo Rauch. Claire Vo describes exactly the problem: even experienced tech professionals struggle to get a basic development environment running. Guillermo's response? *"It's nightmare fuel."*
 >
-> The full clip is also available in this repo: [`assets/podcast-clip.mp4`](assets/podcast-clip.mp4)
+> **[Watch the full episode on YouTube](https://www.youtube.com/watch?v=Yb9IyTOh0xg&t=511s)**
 
 That's when we asked the question nobody had asked before.
 
