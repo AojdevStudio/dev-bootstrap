@@ -25,3 +25,8 @@ irm https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/boot
 ## Notes
 - This repo is designed so **`bootstrap.ps1` is the only entrypoint**.
 - Canonical sources are documented inline in `bootstrap.ps1`.
+
+## Post-install
+- Open a NEW PowerShell window so PATH/profile changes load.
+- Verify installs: `node --version`, `npm --version`, `python --version`, `bun --version`.
+- Authenticate tools as needed: `claude --version` (https://code.claude.com/docs/en/setup) and `codex --version` (https://developers.openai.com/codex/cli).
