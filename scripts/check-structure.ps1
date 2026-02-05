@@ -8,7 +8,10 @@ $requiredPaths = @(
   'LICENSE',
   'bootstrap.ps1',
   'wsl/setup.sh',
+  'macos/bootstrap.sh',
+  'macos/zshrc.snippet.sh',
   'scripts/check-structure.ps1',
+  'scripts/check-structure.sh',
   '.github/workflows/repo-health.yml'
 )
 

@@ -68,11 +68,19 @@ So we built it.
 
 ## The Solution
 
+### Windows
+
 ```powershell
 irm https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/bootstrap.ps1 | iex
 ```
 
-One line. Paste it in PowerShell. Walk away. Come back to a fully configured development machine.
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/macos/bootstrap.sh | bash
+```
+
+One command. Paste it in your terminal. Walk away. Come back to a configured development machine.
 
 <p align="center">
   <img src="assets/architecture.png" alt="dev-bootstrap installation architecture" width="500">
