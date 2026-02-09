@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  structure:
+  structure-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,3 +13,13 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/check-structure.ps1
+
+  structure-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check repo structure
+        shell: bash
+        run: |
+          bash scripts/check-structure.sh
+          bash -n macos/bootstrap.sh

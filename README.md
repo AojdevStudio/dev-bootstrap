@@ -68,11 +68,19 @@ So we built it.
 
 ## The Solution
 
+### Windows
+
 ```powershell
 irm https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/bootstrap.ps1 | iex
 ```
 
-One line. Paste it in PowerShell. Walk away. Come back to a fully configured development machine.
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/macos/bootstrap.sh | bash
+```
+
+One command. Paste it in your terminal. Walk away. Come back to a configured development machine.
 
 <p align="center">
   <img src="assets/architecture.png" alt="dev-bootstrap installation architecture" width="500">
@@ -87,14 +95,14 @@ One line. Paste it in PowerShell. Walk away. Come back to a fully configured dev
 | **fnm** | Latest | Node version manager | [github.com/Schniz/fnm](https://github.com/Schniz/fnm) via winget |
 | **Node.js** | LTS | JavaScript runtime | Installed via fnm |
 | **npm** | Bundled | Package manager | Comes with Node.js |
-| **uv** | Latest | Python toolchain | [astral.sh/uv](https://docs.astral.sh/uv/) |
+| **uv** | Latest | Python toolchain | [astral-sh.uv](https://docs.astral.sh/uv/) via winget |
 | **Python** | 3.12 (pinned) | Python runtime | Installed via uv |
-| **Bun** | Latest | Fast JS runtime | [bun.sh](https://bun.sh/docs/installation) |
-| **Claude Code** | Latest | Anthropic AI CLI | [claude.ai](https://code.claude.com/docs/en/setup) |
+| **Bun** | Latest | Fast JS runtime | [Oven-sh.Bun](https://bun.sh) via winget |
+| **Claude Code** | Latest | Anthropic AI CLI | [@anthropic-ai/claude-code](https://www.npmjs.com/package/@anthropic-ai/claude-code) via npm |
 | **Codex CLI** | Latest | OpenAI code assistant | [openai.com](https://developers.openai.com/codex/cli) |
 | **WSL2** | Latest | Linux on Windows | [Microsoft](https://learn.microsoft.com/en-us/windows/wsl/install) *(optional)* |
 
-> Every tool is installed from its **official canonical source**. No third-party mirrors. No mystery binaries. All sources documented inline in `bootstrap.ps1`.
+> Every tool is installed from its **official canonical source** via winget or npm — avoiding `irm|iex` patterns that corporate proxies (Zscaler, etc.) often block. No third-party mirrors. No mystery binaries. All sources documented inline in `bootstrap.ps1`.
 
 ## How It Works
 

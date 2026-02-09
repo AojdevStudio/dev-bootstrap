@@ -3,9 +3,9 @@ Windows-first bootstrap.
 
 Canonical sources:
 - WSL: https://learn.microsoft.com/en-us/windows/wsl/install
-- uv: https://docs.astral.sh/uv/getting-started/installation/
-- Bun: https://bun.com/docs/installation
-- Claude Code: https://code.claude.com/docs/en/setup
+- uv: https://github.com/microsoft/winget-pkgs (astral-sh.uv)
+- Bun: https://github.com/microsoft/winget-pkgs (Oven-sh.Bun)
+- Claude Code: https://www.npmjs.com/package/@anthropic-ai/claude-code
 - Codex CLI: https://developers.openai.com/codex/cli
 - Git for Windows: https://git-scm.com/download/win
 - winget: https://learn.microsoft.com/en-us/windows/package-manager/winget/
@@ -126,8 +126,8 @@ node --version 2>$null | Out-Host
 npm --version 2>$null | Out-Host
 
 Section "Python via uv (includes Python management)"
-# Official uv PowerShell install: https://docs.astral.sh/uv/getting-started/installation/
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# winget avoids Zscaler/corporate-proxy blocks on irm|iex pattern
+WinGetInstall "astral-sh.uv"
 RefreshPath
 Need "uv" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 uv --version 2>$null | Out-Host
@@ -137,15 +137,15 @@ Need "python" "If this is your first run, open a new PowerShell window and rerun
 python --version 2>$null | Out-Host
 
 Section "Bun"
-# Official Bun PowerShell install: https://bun.com/docs/installation
-powershell -c "irm bun.sh/install.ps1 | iex"
+# winget avoids Zscaler/corporate-proxy blocks on irm|iex pattern
+WinGetInstall "Oven-sh.Bun"
 RefreshPath
 Need "bun" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 bun --version 2>$null | Out-Host
 
 Section "Claude Code"
-# Official setup docs: https://code.claude.com/docs/en/setup
-irm https://claude.ai/install.ps1 | iex
+# npm avoids Zscaler/corporate-proxy blocks on irm|iex pattern
+npm install -g @anthropic-ai/claude-code
 RefreshPath
 Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 claude --version 2>$null | Out-Host
