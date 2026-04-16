@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.0] - 2026-04-16
+
+### Changed
+
+- Windows: Claude Code now installs as a **native binary via winget** (`Anthropic.ClaudeCode`) instead of via `npm install -g @anthropic-ai/claude-code`. Anthropic's documentation marks npm installation as deprecated and recommends the native installer. WinGet was chosen over the `irm https://claude.ai/install.ps1 | iex` native installer because it preserves the proxy-compatibility promise of commit `d24ad9b` (Zscaler and similar proxies block `irm | iex`). This eliminates an entire class of fnm/npm PATH fragility bugs that drove v1.1.0 through v1.1.2 patch releases.
+- README + SECURITY.md install-source tables updated to reflect the new Claude Code install path.
+
+### Notes
+
+- **Manual updates for Claude Code.** The `irm | iex` native installer auto-updates Claude Code in the background; the winget install does not. Run `winget upgrade Anthropic.ClaudeCode` periodically to stay current. Users who prefer auto-updates and are not behind a proxy that blocks piped remote execution can install via `irm https://claude.ai/install.ps1 | iex` instead.
+- **Codex CLI still installs via npm.** OpenAI does not publish a winget package for Codex CLI.
+
 ## [1.1.2] - 2026-04-16
 
 ### Fixed
@@ -66,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Links
-[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.0.0...v1.1.0

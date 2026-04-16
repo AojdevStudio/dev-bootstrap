@@ -30,7 +30,7 @@ This project downloads and executes software on your machine. Every install sour
 | fnm | `winget` (Microsoft) | `Schniz.fnm` package ID |
 | uv | `astral.sh/uv/install.ps1` | [Astral official](https://docs.astral.sh/uv/getting-started/installation/) |
 | Bun | `bun.sh/install.ps1` | [Bun official](https://bun.sh/docs/installation) |
-| Claude Code | `claude.ai/install.ps1` | [Anthropic official](https://code.claude.com/docs/en/setup) |
+| Claude Code | `winget` (Microsoft) | `Anthropic.ClaudeCode` package ID, [Anthropic official](https://code.claude.com/docs/en/setup) |
 | Codex CLI | `npm install -g @openai/codex` | [OpenAI official](https://developers.openai.com/codex/cli) |
 | WSL | `wsl --install` | [Microsoft official](https://learn.microsoft.com/en-us/windows/wsl/install) |
 

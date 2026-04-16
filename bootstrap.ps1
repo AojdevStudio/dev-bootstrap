@@ -198,22 +198,19 @@ Need "bun" "If this is your first run, open a new PowerShell window and rerun so
 bun --version 2>$null | Out-Host
 
 Section "Claude Code"
-# Re-activate fnm in this session: winget installs in earlier sections can
-# spawn sub-shells that drop the fnm multishells junction from PATH, leaving
-# `npm` reachable but its globals prefix invisible to later commands.
-if (Get-Command fnm -ErrorAction SilentlyContinue) {
-  fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
-}
-# npm avoids Zscaler/corporate-proxy blocks on irm|iex pattern
-npm install -g @anthropic-ai/claude-code
-if ($LASTEXITCODE -ne 0) {
-  throw "npm install -g @anthropic-ai/claude-code failed with exit code $LASTEXITCODE. Fix the error above and re-run."
-}
+# Native Claude Code binary via winget. npm install is deprecated upstream
+# (https://code.claude.com/docs/en/setup#deprecated-npm-installation) and
+# produced the fnm/npm PATH fragility that plagued v1.1.0-v1.1.2. Winget
+# also preserves proxy compatibility (vs. the irm|iex native installer).
+# Reminder: `winget upgrade Anthropic.ClaudeCode` is manual — native
+# auto-update only ships with the irm|iex install method.
+WinGetInstall "Anthropic.ClaudeCode"
 RefreshPath
 Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 claude --version 2>$null | Out-Host
 
 Section "Codex CLI"
+# Codex CLI has no winget package yet, so npm remains the install path.
 if (Get-Command fnm -ErrorAction SilentlyContinue) {
   fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 }
