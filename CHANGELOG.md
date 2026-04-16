@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.4.0] - 2026-04-16
+
+### Added
+
+- **pnpm** activated via Corepack (bundled with Node ≥16.10). No global `npm install` — pnpm is managed as a Corepack shim, which plays nicely with per-project `packageManager` fields in `package.json`. Falls back to `npm install -g pnpm` if `corepack` isn't available.
+- **Windows Terminal** (`Microsoft.WindowsTerminal`) added to Base tools. Default on Windows 11, useful for Windows 10 users who are still on `conhost.exe`.
+- **CLI utilities** section with eight tools: `ripgrep` (`BurntSushi.ripgrep.MSVC`), `fd` (`sharkdp.fd`), `bat` (`sharkdp.bat`), `jq` (`jqlang.jq`), `fzf` (`junegunn.fzf`), `lazygit` (`JesseDuffield.lazygit`), `yazi` (`sxyazi.yazi`), and `PowerToys` (`Microsoft.PowerToys`). lazygit and yazi match the macOS bootstrap. ripgrep is also used internally by Claude Code.
+
+### Notes
+
+- First-time runs on a clean machine now take noticeably longer because of the additional installs. Re-runs remain idempotent — `WinGetInstall` short-circuits when each package is already present.
+- PowerToys is a large install (~200MB) that ships several Windows-wide utilities (Run, FancyZones, PowerRename, etc.). Skip via `-SkipWSL` is unrelated; if you don't want PowerToys, comment out the corresponding line in `bootstrap.ps1` before running.
+
 ## [1.3.0] - 2026-04-16
 
 ### Added
@@ -89,7 +102,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Links
-[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.1...v1.1.2

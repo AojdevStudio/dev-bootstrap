@@ -28,9 +28,19 @@ This project downloads and executes software on your machine. Every install sour
 | Git | `winget` (Microsoft) | `Git.Git` package ID |
 | cURL | `winget` (Microsoft) | `cURL.cURL` package ID |
 | GitHub CLI | `winget` (Microsoft) | `GitHub.cli` package ID |
+| Windows Terminal | `winget` (Microsoft) | `Microsoft.WindowsTerminal` package ID |
 | fnm | `winget` (Microsoft) | `Schniz.fnm` package ID |
-| uv | `astral.sh/uv/install.ps1` | [Astral official](https://docs.astral.sh/uv/getting-started/installation/) |
-| Bun | `bun.sh/install.ps1` | [Bun official](https://bun.sh/docs/installation) |
+| pnpm | Corepack (bundled with Node) | [Node.js Corepack docs](https://nodejs.org/api/corepack.html) |
+| uv | `winget` (Microsoft) | `astral-sh.uv` package ID, [Astral official](https://docs.astral.sh/uv/getting-started/installation/) |
+| Bun | `winget` (Microsoft) | `Oven-sh.Bun` package ID, [Bun official](https://bun.sh/docs/installation) |
+| ripgrep | `winget` (Microsoft) | `BurntSushi.ripgrep.MSVC` package ID |
+| fd | `winget` (Microsoft) | `sharkdp.fd` package ID |
+| bat | `winget` (Microsoft) | `sharkdp.bat` package ID |
+| jq | `winget` (Microsoft) | `jqlang.jq` package ID |
+| fzf | `winget` (Microsoft) | `junegunn.fzf` package ID |
+| lazygit | `winget` (Microsoft) | `JesseDuffield.lazygit` package ID |
+| yazi | `winget` (Microsoft) | `sxyazi.yazi` package ID |
+| PowerToys | `winget` (Microsoft) | `Microsoft.PowerToys` package ID |
 | Claude Code | `winget` (Microsoft) | `Anthropic.ClaudeCode` package ID, [Anthropic official](https://code.claude.com/docs/en/setup) |
 | Codex CLI | `npm install -g @openai/codex` | [OpenAI official](https://developers.openai.com/codex/cli) |
 | WSL | `wsl --install` | [Microsoft official](https://learn.microsoft.com/en-us/windows/wsl/install) |

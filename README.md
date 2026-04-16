@@ -99,12 +99,22 @@ One command. Paste it in your terminal. Walk away. Come back to a configured dev
 | **Git** | Latest | Version control | [git-scm.com](https://git-scm.com/download/win) via winget |
 | **cURL** | Latest | HTTP transfers | [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) |
 | **GitHub CLI** | Latest | `gh` — GitHub from the terminal | [cli.github.com](https://cli.github.com/) via winget |
+| **Windows Terminal** | Latest | Modern terminal with tabs, Unicode, GPU rendering | [Microsoft.WindowsTerminal](https://github.com/microsoft/terminal) via winget |
 | **fnm** | Latest | Node version manager | [github.com/Schniz/fnm](https://github.com/Schniz/fnm) via winget |
 | **Node.js** | LTS | JavaScript runtime | Installed via fnm |
 | **npm** | Bundled | Package manager | Comes with Node.js |
+| **pnpm** | Latest | Fast, disk-efficient package manager | Activated via [Corepack](https://nodejs.org/api/corepack.html) (bundled with Node ≥16.10) |
 | **uv** | Latest | Python toolchain | [astral-sh.uv](https://docs.astral.sh/uv/) via winget |
 | **Python** | 3.12 (pinned) | Python runtime | Installed via uv |
 | **Bun** | Latest | Fast JS runtime | [Oven-sh.Bun](https://bun.sh) via winget |
+| **ripgrep** | Latest | Fast `grep` replacement | [BurntSushi.ripgrep.MSVC](https://github.com/BurntSushi/ripgrep) via winget |
+| **fd** | Latest | Fast `find` replacement | [sharkdp.fd](https://github.com/sharkdp/fd) via winget |
+| **bat** | Latest | `cat` with syntax highlighting | [sharkdp.bat](https://github.com/sharkdp/bat) via winget |
+| **jq** | Latest | JSON processor | [jqlang.jq](https://jqlang.github.io/jq/) via winget |
+| **fzf** | Latest | Command-line fuzzy finder | [junegunn.fzf](https://github.com/junegunn/fzf) via winget |
+| **lazygit** | Latest | TUI for git | [JesseDuffield.lazygit](https://github.com/jesseduffield/lazygit) via winget |
+| **yazi** | Latest | TUI file manager | [sxyazi.yazi](https://yazi-rs.github.io/) via winget |
+| **PowerToys** | Latest | Windows power-user utility bundle | [Microsoft.PowerToys](https://github.com/microsoft/PowerToys) via winget |
 | **Claude Code** | Latest | Anthropic AI CLI | [Anthropic.ClaudeCode](https://code.claude.com/docs/en/setup) via winget (native binary, npm install is deprecated upstream) |
 | **Codex CLI** | Latest | OpenAI code assistant | [@openai/codex](https://developers.openai.com/codex/cli) via npm |
 | **WSL2** | Latest | Linux on Windows | [Microsoft](https://learn.microsoft.com/en-us/windows/wsl/install) *(optional; installs Chromium inside WSL via apt)* |

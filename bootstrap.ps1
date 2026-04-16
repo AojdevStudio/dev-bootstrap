@@ -125,6 +125,9 @@ WinGetInstall "Git.Git"
 WinGetInstall "cURL.cURL"
 # GitHub CLI: https://cli.github.com/
 WinGetInstall "GitHub.cli"
+# Windows Terminal: modern terminal with tabs, Unicode, GPU rendering.
+# Default on Windows 11; this install is mainly for Windows 10.
+WinGetInstall "Microsoft.WindowsTerminal"
 
 Section "Node via fnm + npm"
 WinGetInstall "Schniz.fnm"
@@ -178,6 +181,22 @@ Need npm
 node --version 2>$null | Out-Host
 npm --version 2>$null | Out-Host
 
+# pnpm via Corepack (ships with Node 16.10+). Preferred over `npm install -g
+# pnpm` because Corepack manages pnpm as a shim that tracks package.json's
+# packageManager field — no global npm install to conflict with per-project
+# versions. https://nodejs.org/api/corepack.html
+if (Get-Command corepack -ErrorAction SilentlyContinue) {
+  corepack enable pnpm 2>&1 | Out-Null
+  corepack prepare pnpm@latest --activate 2>&1 | Out-Null
+} else {
+  Write-Host "corepack not found — falling back to npm install -g pnpm" -ForegroundColor Yellow
+  npm install -g pnpm
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm install -g pnpm failed with exit code $LASTEXITCODE."
+  }
+}
+pnpm --version 2>$null | Out-Host
+
 Section "Python via uv (includes Python management)"
 # winget avoids Zscaler/corporate-proxy blocks on irm|iex pattern
 WinGetInstall "astral-sh.uv"
@@ -217,6 +236,26 @@ WinGetInstall "Oven-sh.Bun"
 RefreshPath
 Need "bun" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 bun --version 2>$null | Out-Host
+
+Section "CLI utilities"
+# Fast modern replacements for classic *nix tools + TUI helpers.
+# ripgrep: https://github.com/BurntSushi/ripgrep (also used internally by Claude Code)
+WinGetInstall "BurntSushi.ripgrep.MSVC"
+# fd: https://github.com/sharkdp/fd (fast `find` alternative)
+WinGetInstall "sharkdp.fd"
+# bat: https://github.com/sharkdp/bat (`cat` with syntax highlighting)
+WinGetInstall "sharkdp.bat"
+# jq: https://jqlang.github.io/jq/ (JSON processor)
+WinGetInstall "jqlang.jq"
+# fzf: https://github.com/junegunn/fzf (command-line fuzzy finder)
+WinGetInstall "junegunn.fzf"
+# lazygit: https://github.com/jesseduffield/lazygit (TUI for git, matches macOS bootstrap)
+WinGetInstall "JesseDuffield.lazygit"
+# yazi: https://yazi-rs.github.io/ (TUI file manager, matches macOS bootstrap)
+WinGetInstall "sxyazi.yazi"
+# PowerToys: https://github.com/microsoft/PowerToys (Windows power-user utility bundle)
+WinGetInstall "Microsoft.PowerToys"
+RefreshPath
 
 Section "Claude Code"
 # Native Claude Code binary via winget. npm install is deprecated upstream
