@@ -233,7 +233,11 @@ if (-not $SkipWSL) {
   $wslExit = $LASTEXITCODE
   $wslOutput | Out-Host
 
-  $rebootSignaled = $wslOutput -match '(?i)(reboot|restart) (is )?required|(reboot|restart) (your|the) (computer|system|machine)'
+  # Any mention of reboot/restart/"will not be effective until" in a
+  # wsl --install output is treated as a reboot-required signal. A clean
+  # install on a machine with WSL features already enabled produces no such
+  # phrasing, so this is safe to match broadly.
+  $rebootSignaled = $wslOutput -match '(?i)reboot|restart|will not be effective until'
 
   if ($rebootSignaled -or $wslExit -ne 0) {
     Write-Host ""
@@ -250,11 +254,22 @@ if (-not $SkipWSL) {
   } else {
     wsl --set-default-version 2
 
-    $repoRoot = Split-Path -Parent $PSCommandPath
-    $wslScript = Join-Path $repoRoot "wsl\setup.sh"
-    if (Test-Path $wslScript) {
-      $wslPath = wsl wslpath -a "`"$wslScript`""
-      wsl bash -lc "chmod +x $wslPath && $wslPath"
+    # When invoked via `irm | iex`, there is no script file on disk, so
+    # $PSCommandPath is empty and the wsl/setup.sh helper is unreachable.
+    # Skip the second-phase script in that case and guide the user.
+    if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+      $repoRoot = Split-Path -Parent $PSCommandPath
+      $wslScript = Join-Path $repoRoot "wsl\setup.sh"
+      if (Test-Path $wslScript) {
+        $wslPath = wsl wslpath -a "`"$wslScript`""
+        wsl bash -lc "chmod +x $wslPath && $wslPath"
+      }
+    } else {
+      Write-Host ""
+      Write-Host "Running via 'irm | iex' — wsl/setup.sh is not on disk." -ForegroundColor Yellow
+      Write-Host "To finish WSL-side setup, clone the repo and run the helper:" -ForegroundColor Yellow
+      Write-Host "  git clone https://github.com/AojdevStudio/dev-bootstrap" -ForegroundColor Yellow
+      Write-Host "  wsl bash -lc 'chmod +x dev-bootstrap/wsl/setup.sh && dev-bootstrap/wsl/setup.sh'" -ForegroundColor Yellow
     }
   }
 }
