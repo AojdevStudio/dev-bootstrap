@@ -149,14 +149,17 @@ if (Get-Command fnm -ErrorAction SilentlyContinue) {
 
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 fnm install --lts
-fnm use --lts
-# Resolve the concrete LTS version; the `lts-latest` alias is fragile
-# across fnm versions (see Schniz/fnm#1203).
+# `fnm install --lts` activates the version in the current shell's multishell
+# junction. Do NOT follow with `fnm use --lts` — several recent fnm builds from
+# winget reject that flag form with "unexpected argument '--lts' found".
+# Resolve the concrete version from `fnm current` and set it as the default
+# (so new shells pick it up via the profile snippet's `fnm use default`).
 $ltsCurrent = (fnm current 2>$null | Out-String).Trim()
 if ($ltsCurrent -match '^v\d') {
   fnm default $ltsCurrent | Out-Null
 } else {
-  fnm default lts-latest | Out-Null
+  # Fallback for re-runs where `fnm current` reports nothing.
+  fnm default lts-latest 2>$null | Out-Null
 }
 Need node
 Need npm
@@ -195,15 +198,30 @@ Need "bun" "If this is your first run, open a new PowerShell window and rerun so
 bun --version 2>$null | Out-Host
 
 Section "Claude Code"
+# Re-activate fnm in this session: winget installs in earlier sections can
+# spawn sub-shells that drop the fnm multishells junction from PATH, leaving
+# `npm` reachable but its globals prefix invisible to later commands.
+if (Get-Command fnm -ErrorAction SilentlyContinue) {
+  fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+}
 # npm avoids Zscaler/corporate-proxy blocks on irm|iex pattern
 npm install -g @anthropic-ai/claude-code
+if ($LASTEXITCODE -ne 0) {
+  throw "npm install -g @anthropic-ai/claude-code failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+}
 RefreshPath
 Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 claude --version 2>$null | Out-Host
 
 Section "Codex CLI"
+if (Get-Command fnm -ErrorAction SilentlyContinue) {
+  fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+}
 # Official Codex CLI docs: https://developers.openai.com/codex/cli
 npm install -g @openai/codex
+if ($LASTEXITCODE -ne 0) {
+  throw "npm install -g @openai/codex failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+}
 RefreshPath
 Need "codex" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 codex --version 2>$null | Out-Host

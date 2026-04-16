@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.1] - 2026-04-16
+
+### Fixed
+
+- Windows: removed `fnm use --lts` call that several recent fnm builds from winget reject with `unexpected argument '--lts' found`. `fnm install --lts` already activates the version in the current shell, so the follow-up call was both redundant and broken.
+- Windows: Claude Code and Codex install sections now re-activate fnm before calling `npm install -g`, then check `$LASTEXITCODE` and throw a clear error when npm fails. Prevents silent failures where the script continued and halted later with a confusing "Missing command: claude" message.
+
 ## [1.1.0] - 2026-04-16
 
 ### Added
@@ -52,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Links
-[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.0.0...v1.1.0
 [v1.0.0]: https://github.com/AojdevStudio/dev-bootstrap/releases/tag/v1.0.0
