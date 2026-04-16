@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.1.0] - 2026-04-16
+
+### Added
+
+- macOS bootstrap script (`macos/bootstrap.sh`) with Homebrew-driven install of the full toolchain, plus structure checks for the repo
+- macOS extras: `lazygit` and `yazi` installed via Homebrew
+- WSL provisioning now installs `chromium-browser` via apt for Playwright/headless workflows
+- ChatGPT custom-instructions builder prompt under `prompts/`
+- `SECURITY.md` policy and an `[Unreleased]` section in the changelog
+
+### Fixed
+
+- Windows: hardened `bootstrap.ps1` against real-world friction on managed/school/enterprise machines — PATH now merges (not overwrites) session and registry scopes so fnm's Node stays resolvable; winget install checks now require both exit code and package-id match for idempotency; the `dev-bootstrap: fnm` profile snippet upgrades in place on re-runs; fnm is invoked with `--shell powershell` and eager-activates the default Node so `npm` works in the home dir; the concrete LTS version is resolved rather than the fragile `lts-latest` alias; uv's managed Python dir is prepended to PATH so the Microsoft Store `python.exe` alias in `WindowsApps` stops shadowing the real interpreter; `wsl --install` now detects "reboot required" output and bails out cleanly with next-step guidance
+- Replaced `irm | iex` installers with winget/npm to bypass corporate proxies (e.g., Zscaler) that block piped remote execution
+- Corrected GitHub org URLs throughout README (`Jarvis-AojDevStuio` → `AojdevStudio`) and Buy Me a Coffee username format
+
+### Changed
+
+- README now prefixes Windows install one-liners with `Set-ExecutionPolicy -Scope Process` so the installer works on managed machines where the default `Restricted` policy blocks `iex`, and documents the `uv run python` pattern (and why it's needed on Windows)
+
 ## [v1.0.0] - 2026-02-04
 
 ### Added
@@ -28,3 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - README overhauled from minimal stub into comprehensive project documentation
 - YouTube thumbnail replaced with GitHub-hosted video embed for cleaner presentation
+
+
+## Links
+[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.0.0...v1.1.0
+[v1.0.0]: https://github.com/AojdevStudio/dev-bootstrap/releases/tag/v1.0.0
