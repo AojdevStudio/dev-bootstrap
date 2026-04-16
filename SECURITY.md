@@ -27,6 +27,7 @@ This project downloads and executes software on your machine. Every install sour
 |------|---------------|--------------|
 | Git | `winget` (Microsoft) | `Git.Git` package ID |
 | cURL | `winget` (Microsoft) | `cURL.cURL` package ID |
+| GitHub CLI | `winget` (Microsoft) | `GitHub.cli` package ID |
 | fnm | `winget` (Microsoft) | `Schniz.fnm` package ID |
 | uv | `astral.sh/uv/install.ps1` | [Astral official](https://docs.astral.sh/uv/getting-started/installation/) |
 | Bun | `bun.sh/install.ps1` | [Bun official](https://bun.sh/docs/installation) |

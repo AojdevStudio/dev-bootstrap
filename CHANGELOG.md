@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.3.0] - 2026-04-16
+
+### Added
+
+- GitHub CLI (`gh`) installed via winget (`GitHub.cli`) in the Base tools section. Lets you authenticate with GitHub and interact with repos from the terminal without leaving the installer.
+
+### Fixed
+
+- Re-runs no longer duplicate work that's already done. `fnm install --lts` previously emitted `Installing Node vX.Y.Z` followed immediately by `warning: Version already installed`; it's now skipped when fnm reports any installed Node. `uv python install 3.12` is now gated on `uv python find 3.12` exit code — skipped when 3.12 is already managed. `npm install -g @openai/codex` is now gated on `npm ls -g @openai/codex` — skipped when already installed.
+- Claude Code migration from npm (pre-v1.2.0) is now automatic. On re-run, if `@anthropic-ai/claude-code` is still present via npm, it is silently uninstalled before the native winget binary resolves, so there's only one `claude` on PATH.
+
 ## [1.2.0] - 2026-04-16
 
 ### Changed
@@ -78,7 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Links
-[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/AojdevStudio/dev-bootstrap/compare/v1.1.0...v1.1.1

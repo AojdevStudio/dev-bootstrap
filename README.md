@@ -98,6 +98,7 @@ One command. Paste it in your terminal. Walk away. Come back to a configured dev
 |------|---------|---------|--------|
 | **Git** | Latest | Version control | [git-scm.com](https://git-scm.com/download/win) via winget |
 | **cURL** | Latest | HTTP transfers | [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) |
+| **GitHub CLI** | Latest | `gh` — GitHub from the terminal | [cli.github.com](https://cli.github.com/) via winget |
 | **fnm** | Latest | Node version manager | [github.com/Schniz/fnm](https://github.com/Schniz/fnm) via winget |
 | **Node.js** | LTS | JavaScript runtime | Installed via fnm |
 | **npm** | Bundled | Package manager | Comes with Node.js |

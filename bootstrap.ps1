@@ -123,6 +123,8 @@ Section "Base tools"
 WinGetInstall "Git.Git"
 # cURL: https://learn.microsoft.com/en-us/windows/package-manager/winget/
 WinGetInstall "cURL.cURL"
+# GitHub CLI: https://cli.github.com/
+WinGetInstall "GitHub.cli"
 
 Section "Node via fnm + npm"
 WinGetInstall "Schniz.fnm"
@@ -148,10 +150,20 @@ if (Get-Command fnm -ErrorAction SilentlyContinue) {
 '@
 
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
-fnm install --lts
-# `fnm install --lts` activates the version in the current shell's multishell
-# junction. Do NOT follow with `fnm use --lts` — several recent fnm builds from
-# winget reject that flag form with "unexpected argument '--lts' found".
+
+# Idempotency: fnm install --lts is noisy on re-runs ("Installing Node vX.Y.Z"
+# immediately followed by "warning: Version already installed"). Skip it if any
+# Node is already managed by fnm. Users who want to bump LTS can run
+# `fnm install --lts` manually.
+$fnmHasNode = ((fnm list 2>$null | Out-String) -match 'v\d+\.\d+\.\d+')
+if ($fnmHasNode) {
+  Write-Host "Node already managed by fnm — skipping fnm install --lts" -ForegroundColor DarkGray
+} else {
+  fnm install --lts
+}
+
+# Do NOT follow fnm install with `fnm use --lts` — several recent fnm builds
+# from winget reject that flag form with "unexpected argument '--lts' found".
 # Resolve the concrete version from `fnm current` and set it as the default
 # (so new shells pick it up via the profile snippet's `fnm use default`).
 $ltsCurrent = (fnm current 2>$null | Out-String).Trim()
@@ -172,7 +184,16 @@ WinGetInstall "astral-sh.uv"
 RefreshPath
 Need "uv" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 uv --version 2>$null | Out-Host
-uv python install 3.12
+
+# Idempotency: only call `uv python install 3.12` when 3.12 isn't already
+# resolvable via uv. `uv python find` exits non-zero when nothing matches.
+uv python find 3.12 *> $null
+if ($LASTEXITCODE -ne 0) {
+  uv python install 3.12
+} else {
+  Write-Host "Python 3.12 already managed by uv" -ForegroundColor DarkGray
+}
+# `uv python pin` is effectively idempotent but always prints; accept that.
 uv python pin 3.12
 
 # The Microsoft Store `python.exe` alias in %LOCALAPPDATA%\Microsoft\WindowsApps
@@ -204,6 +225,17 @@ Section "Claude Code"
 # also preserves proxy compatibility (vs. the irm|iex native installer).
 # Reminder: `winget upgrade Anthropic.ClaudeCode` is manual — native
 # auto-update only ships with the irm|iex install method.
+
+# Migration cleanup: if a pre-v1.2.0 run left Claude Code installed via npm,
+# remove it so the native winget binary is the sole `claude` on PATH.
+if (Get-Command npm -ErrorAction SilentlyContinue) {
+  $npmClaude = (npm ls -g @anthropic-ai/claude-code --depth=0 2>$null | Out-String)
+  if ($npmClaude -match '@anthropic-ai/claude-code@') {
+    Write-Host "Removing deprecated npm Claude Code install (migrating to native winget binary)..." -ForegroundColor DarkGray
+    npm uninstall -g @anthropic-ai/claude-code 2>&1 | Out-Null
+  }
+}
+
 WinGetInstall "Anthropic.ClaudeCode"
 RefreshPath
 Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
@@ -214,10 +246,20 @@ Section "Codex CLI"
 if (Get-Command fnm -ErrorAction SilentlyContinue) {
   fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 }
-# Official Codex CLI docs: https://developers.openai.com/codex/cli
-npm install -g @openai/codex
-if ($LASTEXITCODE -ne 0) {
-  throw "npm install -g @openai/codex failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+# Idempotency: only call `npm install -g` when the package isn't already installed.
+$codexInstalled = $false
+if (Get-Command npm -ErrorAction SilentlyContinue) {
+  $codexListing = (npm ls -g @openai/codex --depth=0 2>$null | Out-String)
+  $codexInstalled = $codexListing -match '@openai/codex@'
+}
+if (-not $codexInstalled) {
+  # Official Codex CLI docs: https://developers.openai.com/codex/cli
+  npm install -g @openai/codex
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm install -g @openai/codex failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+  }
+} else {
+  Write-Host "Already installed: @openai/codex" -ForegroundColor DarkGray
 }
 RefreshPath
 Need "codex" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
