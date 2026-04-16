@@ -13,7 +13,7 @@
   <a href="#"><img src="https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows" alt="Platform: Windows"></a>
   <a href="#"><img src="https://img.shields.io/badge/PowerShell-5.0+-5391FE?logo=powershell&logoColor=white" alt="PowerShell 5.0+"></a>
   <a href="#"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
-  <a href="https://github.com/Jarvis-AojDevStuio/dev-bootstrap/stargazers"><img src="https://img.shields.io/github/stars/Jarvis-AojDevStuio/dev-bootstrap?style=social" alt="Stars"></a>
+  <a href="https://github.com/AojdevStudio/dev-bootstrap/stargazers"><img src="https://img.shields.io/github/stars/AojdevStudio/dev-bootstrap?style=social" alt="Stars"></a>
 </p>
 
 <p align="center">
@@ -71,13 +71,15 @@ So we built it.
 ### Windows
 
 ```powershell
-irm https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/bootstrap.ps1 | iex
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; irm https://raw.githubusercontent.com/AojdevStudio/dev-bootstrap/main/bootstrap.ps1 | iex
 ```
+
+> **Why the `Set-ExecutionPolicy` prefix?** On many managed, school, church, and enterprise Windows machines, the default `Restricted` policy blocks `iex`. The `-Scope Process` bypass only applies to the current terminal session — it does **not** change system-wide policy.
 
 ### macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/macos/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AojdevStudio/dev-bootstrap/main/macos/bootstrap.sh | bash
 ```
 
 macOS extras included:
@@ -140,8 +142,16 @@ The installer runs through **7 phases**, each building on the last:
 ### Install Everything
 
 ```powershell
-irm https://raw.githubusercontent.com/Jarvis-AojDevStuio/dev-bootstrap/main/bootstrap.ps1 | iex
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; irm https://raw.githubusercontent.com/AojdevStudio/dev-bootstrap/main/bootstrap.ps1 | iex
 ```
+
+If you want the installed fnm profile snippet to load automatically in every future PowerShell session (so `claude`, `codex`, `npm`, etc. stay on PATH after reboot), also run once:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+> **Managed machines:** If you see *"the setting is overridden by a policy defined at a more specific scope"*, your organization enforces a stricter policy via Group Policy. In that case, you'll need to invoke the `fnm env ... | Invoke-Expression` snippet manually at the start of each shell session, or ask your admin to allow `RemoteSigned` for your account.
 
 ### Install Without WSL
 
@@ -154,13 +164,15 @@ pwsh -File ./bootstrap.ps1 -SkipWSL
 Open a **new PowerShell window** (required for PATH changes to take effect), then verify:
 
 ```powershell
-node --version      # Node.js
-npm --version       # npm
-python --version    # Python 3.12
-bun --version       # Bun
-claude --version    # Claude Code (authenticate: https://code.claude.com/docs/en/setup)
-codex --version     # Codex CLI (authenticate: https://developers.openai.com/codex/cli)
+node --version           # Node.js
+npm --version            # npm
+uv run python --version  # Python 3.12 via uv-managed interpreter
+bun --version            # Bun
+claude --version         # Claude Code (authenticate: https://code.claude.com/docs/en/setup)
+codex --version          # Codex CLI (authenticate: https://developers.openai.com/codex/cli)
 ```
+
+> **Why `uv run python` instead of `python`?** On Windows, the Microsoft Store `python.exe` alias in `WindowsApps` can shadow your real interpreter. `uv run python` bypasses that alias entirely by asking uv to resolve its managed Python directly. If you need bare `python` on your PATH permanently, run `uv python update-shell` after installation.
 
 ## The Story
 
@@ -237,15 +249,15 @@ Key guidelines:
 
 ## License
 
-[MIT](LICENSE) - Copyright 2026 [AOJDevStudio](https://github.com/Jarvis-AojDevStuio)
+[MIT](LICENSE) - Copyright 2026 [AOJDevStudio](https://github.com/AojdevStudio)
 
 ---
 
 <p align="center">
-  <strong>If this saved you from a setup nightmare, <a href="https://github.com/Jarvis-AojDevStuio/dev-bootstrap">give it a star</a>.</strong><br>
+  <strong>If this saved you from a setup nightmare, <a href="https://github.com/AojdevStudio/dev-bootstrap">give it a star</a>.</strong><br>
   <em>Because nobody should spend their morning installing Homebrew.</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Jarvis-AojDevStuio/dev-bootstrap/stargazers"><img src="https://img.shields.io/github/stars/Jarvis-AojDevStuio/dev-bootstrap?style=social" alt="Stars"></a>
+  <a href="https://github.com/AojdevStudio/dev-bootstrap/stargazers"><img src="https://img.shields.io/github/stars/AojdevStudio/dev-bootstrap?style=social" alt="Stars"></a>
 </p>
