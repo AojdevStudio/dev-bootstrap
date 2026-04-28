@@ -110,7 +110,7 @@ log "Base packages (apt)"
 apt_install_if_missing \
   ca-certificates curl wget git build-essential pkg-config \
   zsh tmux unzip xz-utils file \
-  ripgrep fd-find bat jq fzf lazygit \
+  ripgrep fd-find bat jq fzf \
   software-properties-common gnupg lsb-release apt-transport-https
 
 # Ubuntu packages fd as fdfind and bat as batcat to dodge name collisions
@@ -119,6 +119,35 @@ apt_install_if_missing \
 mkdir -p "$HOME/.local/bin"
 [[ -e "$HOME/.local/bin/fd" ]] || ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
 [[ -e "$HOME/.local/bin/bat" ]] || ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+
+# -------------------- lazygit (GitHub release binary) --------------------
+
+log "lazygit (GitHub release binary)"
+
+if ! command -v lazygit >/dev/null 2>&1; then
+  # lazygit is NOT in Ubuntu 24.04 archives (only lazycore-dev is) — fetch
+  # the official release binary instead.
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64) LG_ARCH="Linux_x86_64" ;;
+    aarch64) LG_ARCH="Linux_arm64" ;;
+    *) echo "Unsupported arch for lazygit release: $ARCH" >&2; LG_ARCH="" ;;
+  esac
+  if [[ -n "$LG_ARCH" ]]; then
+    LG_TMP="$(mktemp -d)"
+    LG_TAG="$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -oE '"tag_name":\s*"v[^"]+"' | head -n1 | grep -oE 'v[^"]+')"
+    LG_VERSION="${LG_TAG#v}"
+    if [[ -n "$LG_VERSION" ]]; then
+      curl -fsSL -o "$LG_TMP/lazygit.tar.gz" \
+        "https://github.com/jesseduffield/lazygit/releases/download/$LG_TAG/lazygit_${LG_VERSION}_${LG_ARCH}.tar.gz"
+      tar -xzf "$LG_TMP/lazygit.tar.gz" -C "$LG_TMP" lazygit
+      install -m 0755 "$LG_TMP/lazygit" "$HOME/.local/bin/lazygit"
+      rm -rf "$LG_TMP"
+    else
+      echo "Could not resolve lazygit release URL — skipping (re-run later)." >&2
+    fi
+  fi
+fi
 
 # -------------------- GitHub CLI (apt repo) --------------------
 
