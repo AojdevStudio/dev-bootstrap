@@ -87,7 +87,14 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 require_cmd sudo
-sudo -v
+# Non-interactive check (no TTY required). Cloud-init / provisioners drop the
+# user into NOPASSWD before invoking this script, so a true passwordless
+# sudo must already work — refuse rather than hang prompting.
+sudo -n true 2>/dev/null || {
+  echo "Passwordless sudo is required. Add this to /etc/sudoers.d/:" >&2
+  echo "  $(whoami) ALL=(ALL) NOPASSWD:ALL" >&2
+  exit 1
+}
 
 # Universe is required for lazygit and a few other tools on cloud images.
 if ! grep -Eq '^[^#]*\s+universe(\s|$)' /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources 2>/dev/null; then
