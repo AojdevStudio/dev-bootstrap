@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  Git &bull; Node.js &bull; Python &bull; Bun &bull; Claude Code &bull; Codex CLI &bull; WSL2<br>
+  Git &bull; Node.js &bull; Python &bull; Bun &bull; Claude Code &bull; Codex CLI &bull; WSL2 &bull; Docker Desktop<br>
   <em>One command. All of them. On Windows.</em>
 </p>
 
@@ -115,15 +115,16 @@ One command. Paste it in your terminal. Walk away. Come back to a configured dev
 | **lazygit** | Latest | TUI for git | [JesseDuffield.lazygit](https://github.com/jesseduffield/lazygit) via winget |
 | **yazi** | Latest | TUI file manager | [sxyazi.yazi](https://yazi-rs.github.io/) via winget |
 | **PowerToys** | Latest | Windows power-user utility bundle | [Microsoft.PowerToys](https://github.com/microsoft/PowerToys) via winget |
-| **Claude Code** | Latest | Anthropic AI CLI | [Anthropic.ClaudeCode](https://code.claude.com/docs/en/setup) via winget (native binary, npm install is deprecated upstream) |
-| **Codex CLI** | Latest | OpenAI code assistant | [@openai/codex](https://developers.openai.com/codex/cli) via npm |
+| **Claude Code** | Latest + auto-updating | Anthropic AI CLI | [Anthropic native installer](https://code.claude.com/docs/en/setup) (`install.ps1`; npm install is deprecated upstream) |
+| **Codex CLI** | Latest | OpenAI code assistant | [@openai/codex@latest](https://developers.openai.com/codex/cli) via npm |
 | **WSL2** | Latest | Linux on Windows | [Microsoft](https://learn.microsoft.com/en-us/windows/wsl/install) *(optional; installs Chromium inside WSL via apt)* |
+| **Docker Desktop** | Latest | Container runtime + desktop app | [Docker.DockerDesktop](https://docs.docker.com/desktop/setup/install/windows-install/) via winget *(skipped with `-SkipWSL`)* |
 
-> Every tool is installed from its **official canonical source** via winget or npm — avoiding `irm|iex` patterns that corporate proxies (Zscaler, etc.) often block. No third-party mirrors. No mystery binaries. All sources documented inline in `bootstrap.ps1`.
+> Every tool is installed from its **official canonical source**. Most tools use winget, Corepack, uv, or npm; Claude Code intentionally uses Anthropic's native installer so it can receive background auto-updates. No third-party mirrors. No mystery binaries. All sources are documented inline in `bootstrap.ps1`.
 
 ## How It Works
 
-The installer runs through **7 phases**, each building on the last:
+The installer runs through **8 phases**, each building on the last:
 
 | Phase | What Happens |
 |-------|-------------|
@@ -134,6 +135,7 @@ The installer runs through **7 phases**, each building on the last:
 | **5. Bun** | Installs the Bun JavaScript runtime. |
 | **6. AI Tools** | Installs Claude Code (Anthropic) and Codex CLI (OpenAI). |
 | **7. WSL2** | *(Optional)* Installs Windows Subsystem for Linux v2 + Ubuntu. Runs `wsl/setup.sh` inside WSL for Claude Code + Linux essentials. |
+| **8. Docker Desktop** | Installs Docker Desktop via winget after WSL is available. Skipped when `-SkipWSL` is used, with manual setup directions printed at the end. |
 
 ### What makes it different
 
@@ -141,7 +143,7 @@ The installer runs through **7 phases**, each building on the last:
 - **Auto-admin** — If WSL needs admin rights, the script re-launches itself elevated. You don't have to remember "Run as Administrator."
 - **PATH-aware** — Refreshes PATH from the Windows registry after each install so subsequent tools can find their dependencies.
 - **Fail-fast** — Uses `Set-StrictMode -Version Latest` and `$ErrorActionPreference = "Stop"`. If something fails, you know immediately.
-- **WSL-optional** — Pass `-SkipWSL` if you don't need Linux. Everything else still works.
+- **WSL-optional** — Pass `-SkipWSL` if you don't need Linux or Docker Desktop. The script prints manual Docker setup directions instead.
 
 ## Quick Start
 
@@ -149,6 +151,7 @@ The installer runs through **7 phases**, each building on the last:
 
 - **Windows 10/11** with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) installed (comes pre-installed on Windows 11)
 - **PowerShell 5.0+** (pre-installed on Windows 10/11)
+- **Virtualization enabled** if you want WSL2 + Docker Desktop. Docker Desktop also requires supported Windows 10/11 editions and may require license acceptance on first launch.
 
 ### Install Everything
 
@@ -164,11 +167,13 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 > **Managed machines:** If you see *"the setting is overridden by a policy defined at a more specific scope"*, your organization enforces a stricter policy via Group Policy. In that case, you'll need to invoke the `fnm env ... | Invoke-Expression` snippet manually at the start of each shell session, or ask your admin to allow `RemoteSigned` for your account.
 
-### Install Without WSL
+### Install Without WSL or Docker Desktop
 
 ```powershell
 pwsh -File ./bootstrap.ps1 -SkipWSL
 ```
+
+`-SkipWSL` also skips Docker Desktop because Docker Desktop depends on WSL2 for the default Linux-container backend. The script prints easy manual Docker setup steps at the end.
 
 ### After Installation
 
@@ -181,6 +186,7 @@ uv run python --version  # Python 3.12 via uv-managed interpreter
 bun --version            # Bun
 claude --version         # Claude Code (authenticate: https://code.claude.com/docs/en/setup)
 codex --version          # Codex CLI (authenticate: https://developers.openai.com/codex/cli)
+docker --version         # Docker CLI, after Docker Desktop starts
 ```
 
 > **Why `uv run python` instead of `python`?** On Windows, the Microsoft Store `python.exe` alias in `WindowsApps` can shadow your real interpreter. `uv run python` bypasses that alias entirely by asking uv to resolve its managed Python directly. If you need bare `python` on your PATH permanently, run `uv python update-shell` after installation.
@@ -222,7 +228,7 @@ The script handles this gracefully. winget skips already-installed packages. Pro
 <details>
 <summary><strong>Do I need admin rights?</strong></summary>
 
-Only if you want WSL2. The script auto-detects and re-launches as admin if needed. Use `-SkipWSL` to avoid admin entirely.
+Only if you want WSL2 or Docker Desktop. The script auto-detects and re-launches as admin if needed. Use `-SkipWSL` to avoid the WSL/Docker path entirely.
 
 </details>
 
@@ -243,7 +249,7 @@ Only if you want WSL2. The script auto-detects and re-launches as admin if neede
 <details>
 <summary><strong>Can I customize which tools get installed?</strong></summary>
 
-Not yet — the script installs the full stack. We're considering modular installation flags for a future version. For now, use `-SkipWSL` to skip the only optional component.
+Not yet — the script installs the full stack. We're considering modular installation flags for a future version. For now, use `-SkipWSL` to skip WSL2 and Docker Desktop.
 
 </details>
 
