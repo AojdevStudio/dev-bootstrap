@@ -5,8 +5,9 @@ Canonical sources:
 - WSL: https://learn.microsoft.com/en-us/windows/wsl/install
 - uv: https://github.com/microsoft/winget-pkgs (astral-sh.uv)
 - Bun: https://github.com/microsoft/winget-pkgs (Oven-sh.Bun)
-- Claude Code: https://www.npmjs.com/package/@anthropic-ai/claude-code
+- Claude Code: https://code.claude.com/docs/en/setup
 - Codex CLI: https://developers.openai.com/codex/cli
+- Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/
 - Git for Windows: https://git-scm.com/download/win
 - winget: https://learn.microsoft.com/en-us/windows/package-manager/winget/
 #>
@@ -15,6 +16,8 @@ Canonical sources:
 param(
   [switch]$SkipWSL
 )
+
+$BootstrapUrl = "https://raw.githubusercontent.com/AojdevStudio/dev-bootstrap/main/bootstrap.ps1"
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -33,12 +36,23 @@ function EnsureAdminForWSL {
   if ($SkipWSL) { return }
   if (IsAdmin) { return }
 
-  Write-Host "Re-launching as Administrator (needed to enable WSL)..." -ForegroundColor Yellow
-  $args = @(
-    "-NoProfile",
-    "-ExecutionPolicy","Bypass",
-    "-File","`"$PSCommandPath`""
-  ) + $MyInvocation.UnboundArguments
+  Write-Host "Re-launching as Administrator (needed for WSL and Docker Desktop)..." -ForegroundColor Yellow
+  if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+    $args = @(
+      "-NoProfile",
+      "-ExecutionPolicy", "Bypass",
+      "-File", "`"$PSCommandPath`""
+    ) + $MyInvocation.UnboundArguments
+  } else {
+    # When invoked via `irm | iex`, there is no script file to pass to -File.
+    # Re-run the canonical one-liner elevated instead.
+    $command = "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; irm '$BootstrapUrl' | iex"
+    $args = @(
+      "-NoProfile",
+      "-ExecutionPolicy", "Bypass",
+      "-Command", $command
+    )
+  }
 
   Start-Process powershell.exe -Verb RunAs -ArgumentList $args | Out-Null
   exit 0
@@ -74,6 +88,34 @@ function RefreshPath {
   $env:Path = ($merged -join ';')
 }
 
+function PrependPathIfExists([string]$pathToAdd) {
+  if (-not (Test-Path $pathToAdd)) { return }
+  if (($env:Path -split ';') -contains $pathToAdd) { return }
+  $env:Path = "$pathToAdd;$env:Path"
+}
+
+function FindUvPython([string]$version) {
+  # `uv python find` writes an expected "not found" message to stderr and
+  # exits non-zero when the interpreter is absent. Under
+  # `$ErrorActionPreference = "Stop"`, PowerShell can promote that stderr
+  # record into a terminating NativeCommandError. Probe it with stderr muted.
+  $found = ''
+  $exitCode = 1
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    $found = (& uv python find $version 2>$null | Out-String).Trim()
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+
+  return [pscustomobject]@{
+    ExitCode = $exitCode
+    Path = $found
+  }
+}
+
 function WinGetInstall([string]$id) {
   # Idempotency: winget list can exit 0 with "No installed package found" text
   # on some versions, so we can't trust exit code alone. Require BOTH the
@@ -86,6 +128,13 @@ function WinGetInstall([string]$id) {
   }
   Write-Host "Installing: $id"
   winget install --id $id -e --source winget --accept-package-agreements --accept-source-agreements
+  if ($LASTEXITCODE -eq 3010) {
+    Write-Host "Installed: $id (reboot required to finish setup)" -ForegroundColor Yellow
+    return
+  }
+  if ($LASTEXITCODE -ne 0) {
+    throw "winget install $id failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+  }
 }
 
 function EnsureProfileSnippet([string]$marker, [string]$snippet) {
@@ -205,25 +254,31 @@ Need "uv" "If this is your first run, open a new PowerShell window and rerun so 
 uv --version 2>$null | Out-Host
 
 # Idempotency: only call `uv python install 3.12` when 3.12 isn't already
-# resolvable via uv. `uv python find` exits non-zero when nothing matches.
-uv python find 3.12 *> $null
-if ($LASTEXITCODE -ne 0) {
+# resolvable via uv. Probe safely because a missing interpreter is expected
+# on fresh machines.
+$uvPython = FindUvPython "3.12"
+if ($uvPython.ExitCode -ne 0 -or -not $uvPython.Path) {
   uv python install 3.12
+  if ($LASTEXITCODE -ne 0) {
+    throw "uv python install 3.12 failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+  }
 } else {
   Write-Host "Python 3.12 already managed by uv" -ForegroundColor DarkGray
 }
 # `uv python pin` is effectively idempotent but always prints; accept that.
 uv python pin 3.12
+if ($LASTEXITCODE -ne 0) {
+  throw "uv python pin 3.12 failed with exit code $LASTEXITCODE. Fix the error above and re-run."
+}
 
 # The Microsoft Store `python.exe` alias in %LOCALAPPDATA%\Microsoft\WindowsApps
 # satisfies Get-Command but errors when executed. Prepend uv's managed Python
 # dir so the real interpreter resolves first.
-$uvPythonExe = (uv python find 3.12 2>$null)
+$uvPython = FindUvPython "3.12"
+$uvPythonExe = $uvPython.Path
 if ($uvPythonExe -and (Test-Path $uvPythonExe)) {
   $uvPythonDir = Split-Path -Parent $uvPythonExe
-  if (-not (($env:Path -split ';') -contains $uvPythonDir)) {
-    $env:Path = "$uvPythonDir;$env:Path"
-  }
+  PrependPathIfExists $uvPythonDir
 }
 
 # Verify via `uv run` so we exercise uv's interpreter resolution directly,
@@ -258,57 +313,75 @@ WinGetInstall "Microsoft.PowerToys"
 RefreshPath
 
 Section "Claude Code"
-# Native Claude Code binary via winget. npm install is deprecated upstream
-# (https://code.claude.com/docs/en/setup#deprecated-npm-installation) and
-# produced the fnm/npm PATH fragility that plagued v1.1.0-v1.1.2. Winget
-# also preserves proxy compatibility (vs. the irm|iex native installer).
-# Reminder: `winget upgrade Anthropic.ClaudeCode` is manual — native
-# auto-update only ships with the irm|iex install method.
+# Auto-updating native Claude Code installer. This intentionally uses
+# Anthropic's official native installer instead of WinGet because WinGet
+# installs do not receive Claude Code's background auto-updates.
+# https://code.claude.com/docs/en/setup
 
-# Migration cleanup: if a pre-v1.2.0 run left Claude Code installed via npm,
-# remove it so the native winget binary is the sole `claude` on PATH.
+# Migration cleanup: if older runs left Claude Code installed via npm or WinGet,
+# remove those package-manager copies so the auto-updating native binary is the
+# sole `claude` on PATH.
 if (Get-Command npm -ErrorAction SilentlyContinue) {
   $npmClaude = (npm ls -g @anthropic-ai/claude-code --depth=0 2>$null | Out-String)
   if ($npmClaude -match '@anthropic-ai/claude-code@') {
-    Write-Host "Removing deprecated npm Claude Code install (migrating to native winget binary)..." -ForegroundColor DarkGray
+    Write-Host "Removing deprecated npm Claude Code install..." -ForegroundColor DarkGray
     npm uninstall -g @anthropic-ai/claude-code 2>&1 | Out-Null
   }
 }
 
-WinGetInstall "Anthropic.ClaudeCode"
+$wingetClaude = ''
+$wingetClaudeExit = 1
+try {
+  $wingetClaude = (winget list --id Anthropic.ClaudeCode -e --source winget 2>&1 | Out-String)
+  $wingetClaudeExit = $LASTEXITCODE
+} catch {
+  $wingetClaude = ''
+  $wingetClaudeExit = 1
+}
+if ($wingetClaudeExit -eq 0 -and $wingetClaude -match [regex]::Escape('Anthropic.ClaudeCode')) {
+  Write-Host "Removing WinGet Claude Code install (switching to auto-updating native installer)..." -ForegroundColor DarkGray
+  winget uninstall --id Anthropic.ClaudeCode -e --source winget
+}
+
+Write-Host "Installing/updating Claude Code via Anthropic native installer..."
+Invoke-Expression (Invoke-RestMethod "https://claude.ai/install.ps1")
+$claudeLocalBin = Join-Path $HOME ".local\bin"
+PrependPathIfExists $claudeLocalBin
 RefreshPath
-Need "claude" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
+Need "claude" "Claude Code installed, but 'claude' is not on PATH yet. Open a new PowerShell window and rerun: claude --version"
 claude --version 2>$null | Out-Host
 
 Section "Codex CLI"
-# Codex CLI has no winget package yet, so npm remains the install path.
+# Codex CLI has no winget package yet, so npm remains the official install path.
+# Always target @latest so re-runs upgrade stale installs too.
+# https://developers.openai.com/codex/cli
 if (Get-Command fnm -ErrorAction SilentlyContinue) {
   fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 }
-# Idempotency: only call `npm install -g` when the package isn't already installed.
-$codexInstalled = $false
-if (Get-Command npm -ErrorAction SilentlyContinue) {
-  $codexListing = (npm ls -g @openai/codex --depth=0 2>$null | Out-String)
-  $codexInstalled = $codexListing -match '@openai/codex@'
-}
-if (-not $codexInstalled) {
-  # Official Codex CLI docs: https://developers.openai.com/codex/cli
-  npm install -g @openai/codex
-  if ($LASTEXITCODE -ne 0) {
-    throw "npm install -g @openai/codex failed with exit code $LASTEXITCODE. Fix the error above and re-run."
-  }
-} else {
-  Write-Host "Already installed: @openai/codex" -ForegroundColor DarkGray
+Write-Host "Installing/upgrading: @openai/codex@latest"
+npm install -g @openai/codex@latest
+if ($LASTEXITCODE -ne 0) {
+  throw "npm install -g @openai/codex@latest failed with exit code $LASTEXITCODE. Fix the error above and re-run."
 }
 RefreshPath
 Need "codex" "If this is your first run, open a new PowerShell window and rerun so PATH updates apply."
 codex --version 2>$null | Out-Host
 
+$wslNeedsRerun = $false
+
 if (-not $SkipWSL) {
   Section "WSL2"
   # Microsoft: https://learn.microsoft.com/en-us/windows/wsl/install
-  $wslOutput = wsl --install 2>&1 | Out-String
-  $wslExit = $LASTEXITCODE
+  $wslOutput = ''
+  $wslExit = 1
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    $wslOutput = wsl --install 2>&1 | Out-String
+    $wslExit = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
   $wslOutput | Out-Host
 
   # Any mention of reboot/restart/"will not be effective until" in a
@@ -318,6 +391,7 @@ if (-not $SkipWSL) {
   $rebootSignaled = $wslOutput -match '(?i)reboot|restart|will not be effective until'
 
   if ($rebootSignaled -or $wslExit -ne 0) {
+    $wslNeedsRerun = $true
     Write-Host ""
     Write-Host "================================================================" -ForegroundColor Yellow
     if ($rebootSignaled) {
@@ -352,13 +426,47 @@ if (-not $SkipWSL) {
   }
 }
 
+if (-not $SkipWSL -and -not $wslNeedsRerun) {
+  Section "Docker Desktop"
+  # Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/
+  WinGetInstall "Docker.DockerDesktop"
+  RefreshPath
+  if (Get-Command docker -ErrorAction SilentlyContinue) {
+    docker --version 2>$null | Out-Host
+  } else {
+    Write-Host "Docker Desktop installed. Open a new PowerShell window after Docker Desktop starts to use 'docker'." -ForegroundColor Yellow
+  }
+} elseif (-not $SkipWSL -and $wslNeedsRerun) {
+  Write-Host ""
+  Write-Host "Docker Desktop setup deferred until WSL finishes after reboot." -ForegroundColor Yellow
+  Write-Host "Reboot Windows, then re-run the bootstrap command without -SkipWSL to install Docker Desktop." -ForegroundColor Yellow
+}
+
 Section "Finish"
-Write-Host "[OK] All install steps completed."
+if ($wslNeedsRerun) {
+  Write-Host "[OK] Pre-reboot install steps completed."
+} else {
+  Write-Host "[OK] All install steps completed."
+}
 Write-Host "Open a NEW PowerShell window so PATH/profile changes load."
 Write-Host "Then verify and authenticate if needed:"
 Write-Host " - node --version"
 Write-Host " - npm --version"
-Write-Host " - python --version"
+Write-Host " - uv run python --version"
 Write-Host " - bun --version"
 Write-Host " - claude --version (sign in / authenticate) https://code.claude.com/docs/en/setup"
 Write-Host " - codex --version (sign in / authenticate) https://developers.openai.com/codex/cli"
+if ($SkipWSL) {
+  Write-Host ""
+  Write-Host "Docker Desktop was skipped because -SkipWSL was used." -ForegroundColor Yellow
+  Write-Host "To install Docker later:" -ForegroundColor Yellow
+  Write-Host "  1. Open PowerShell as Administrator." -ForegroundColor Yellow
+  Write-Host "  2. Run: winget install -e --id Docker.DockerDesktop --accept-package-agreements --accept-source-agreements" -ForegroundColor Yellow
+  Write-Host "  3. Open Docker Desktop, accept Docker's Subscription Service Agreement, then run: docker run hello-world" -ForegroundColor Yellow
+} elseif ($wslNeedsRerun) {
+  Write-Host ""
+  Write-Host "After reboot, re-run the bootstrap command to finish WSL and Docker Desktop." -ForegroundColor Yellow
+} else {
+  Write-Host " - docker --version"
+  Write-Host " - docker run hello-world (after Docker Desktop starts and terms are accepted)"
+}

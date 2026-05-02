@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Windows: Docker Desktop now installs via WinGet (`Docker.DockerDesktop`) after WSL is available. Runs with the default WSL-enabled bootstrap path and is skipped when `-SkipWSL` is used; the finish message prints manual Docker setup steps for skipped/deferred installs.
+- Domain docs and ADR scaffolding for installer behavior decisions.
+
+### Changed
+
+- Windows: Claude Code now uses Anthropic's auto-updating native installer (`https://claude.ai/install.ps1`) instead of the WinGet package, so fresh installs receive Claude Code background updates. Existing npm or WinGet Claude installs are removed first to avoid PATH conflicts.
+- Windows: Codex CLI now runs `npm install -g @openai/codex@latest` on every run so stale global installs are upgraded.
+
+### Fixed
+
+- Windows: `uv python find 3.12` no longer aborts a fresh install with `NativeCommandError` when Python 3.12 is absent; the expected miss is probed with stderr muted before `uv python install 3.12` runs.
+- Windows: elevated self-relaunch now works from the documented `irm ... | iex` one-liner by re-running the canonical bootstrap URL when no local script path exists.
 
 ## [1.4.0] - 2026-04-16
 

@@ -41,9 +41,10 @@ This project downloads and executes software on your machine. Every install sour
 | lazygit | `winget` (Microsoft) | `JesseDuffield.lazygit` package ID |
 | yazi | `winget` (Microsoft) | `sxyazi.yazi` package ID |
 | PowerToys | `winget` (Microsoft) | `Microsoft.PowerToys` package ID |
-| Claude Code | `winget` (Microsoft) | `Anthropic.ClaudeCode` package ID, [Anthropic official](https://code.claude.com/docs/en/setup) |
-| Codex CLI | `npm install -g @openai/codex` | [OpenAI official](https://developers.openai.com/codex/cli) |
+| Claude Code | Anthropic native installer | `irm https://claude.ai/install.ps1 \| iex`, [Anthropic official](https://code.claude.com/docs/en/setup) |
+| Codex CLI | `npm install -g @openai/codex@latest` | [OpenAI official](https://developers.openai.com/codex/cli) |
 | WSL | `wsl --install` | [Microsoft official](https://learn.microsoft.com/en-us/windows/wsl/install) |
+| Docker Desktop | `winget` (Microsoft) | `Docker.DockerDesktop` package ID, [Docker official](https://docs.docker.com/desktop/setup/install/windows-install/) |
 
 **We do not use third-party mirrors, custom binaries, or unofficial package sources.**
 
@@ -51,17 +52,17 @@ All source URLs are documented inline in [`bootstrap.ps1`](bootstrap.ps1) for in
 
 ## What This Project Does NOT Do
 
-- **No credential storage** — API keys for Claude Code and Codex CLI are handled by those tools' own auth flows, never by this script.
-- **No telemetry** — The script does not phone home, track usage, or collect any data.
-- **No persistent services** — Nothing runs in the background after installation completes.
-- **No system modification beyond PATH** — The only system-level changes are PATH additions and a PowerShell profile snippet for fnm.
+- **No credential storage** — API keys for Claude Code, Codex CLI, Docker, and GitHub are handled by those tools' own auth flows, never by this script.
+- **No project telemetry** — The bootstrap script does not add analytics, phone-home behavior, or tracking.
+- **No project-owned background services** — Docker Desktop and WSL install their own system components when selected; this project does not add custom services.
 
 ## Security Best Practices for Users
 
-1. **Read the script before running it.** The entire installer is a single file: [`bootstrap.ps1`](bootstrap.ps1). It's 183 lines.
+1. **Read the script before running it.** The entire installer is a single file: [`bootstrap.ps1`](bootstrap.ps1).
 2. **Verify the URL.** The one-liner fetches from `raw.githubusercontent.com/AojdevStudio/dev-bootstrap/main/bootstrap.ps1`. Confirm you're pointed at the correct repository.
-3. **Use `-SkipWSL`** if you don't need WSL and want to avoid admin elevation.
+3. **Use `-SkipWSL`** if you don't need WSL or Docker Desktop and want to avoid that admin-heavy path.
 4. **Review your PowerShell profile** after installation. The script adds one snippet (fnm initialization), marked with `# ---- dev-bootstrap: fnm ----` for easy identification.
+5. **Review Docker Desktop licensing** before commercial use. Larger enterprises may need a paid Docker subscription.
 
 ## Scope
 
