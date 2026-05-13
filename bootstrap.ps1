@@ -88,6 +88,16 @@ function RefreshPath {
   $env:Path = ($merged -join ';')
 }
 
+function EnsureFnmActivated {
+  # Re-evaluate fnm's PowerShell env block in the current scope. Required
+  # before any `npm` / `npx` call when the script is run via `irm | iex`,
+  # because fnm activation does not persist across the piped child scopes.
+  # Idempotent: no-op when fnm is not installed.
+  if (Get-Command fnm -ErrorAction SilentlyContinue) {
+    fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+  }
+}
+
 function PrependPathIfExists([string]$pathToAdd) {
   if (-not (Test-Path $pathToAdd)) { return }
   if (($env:Path -split ';') -contains $pathToAdd) { return }
@@ -239,6 +249,7 @@ if (Get-Command corepack -ErrorAction SilentlyContinue) {
   corepack prepare pnpm@latest --activate 2>&1 | Out-Null
 } else {
   Write-Host "corepack not found — falling back to npm install -g pnpm" -ForegroundColor Yellow
+  EnsureFnmActivated
   npm install -g pnpm
   if ($LASTEXITCODE -ne 0) {
     throw "npm install -g pnpm failed with exit code $LASTEXITCODE."
@@ -321,6 +332,7 @@ Section "Claude Code"
 # Migration cleanup: if older runs left Claude Code installed via npm or WinGet,
 # remove those package-manager copies so the auto-updating native binary is the
 # sole `claude` on PATH.
+EnsureFnmActivated
 if (Get-Command npm -ErrorAction SilentlyContinue) {
   $npmClaude = (npm ls -g @anthropic-ai/claude-code --depth=0 2>$null | Out-String)
   if ($npmClaude -match '@anthropic-ai/claude-code@') {
@@ -355,9 +367,7 @@ Section "Codex CLI"
 # Codex CLI has no winget package yet, so npm remains the official install path.
 # Always target @latest so re-runs upgrade stale installs too.
 # https://developers.openai.com/codex/cli
-if (Get-Command fnm -ErrorAction SilentlyContinue) {
-  fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
-}
+EnsureFnmActivated
 Write-Host "Installing/upgrading: @openai/codex@latest"
 npm install -g @openai/codex@latest
 if ($LASTEXITCODE -ne 0) {
