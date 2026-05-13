@@ -10,7 +10,7 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || { echo "tests/run.sh: cannot cd to $REPO_ROOT" >&2; exit 1; }
 
 PASS=0
 FAIL=0
