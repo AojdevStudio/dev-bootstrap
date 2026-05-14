@@ -88,6 +88,45 @@ macOS extras included:
 
 One command. Paste it in your terminal. Walk away. Come back to a configured development machine.
 
+#### macOS flags
+
+```bash
+bash macos/bootstrap.sh [--brew-only] [--fnm] [--force-relink] [--restore-globals FILE]
+```
+
+- `--brew-only` — install `node@${PIN}` directly via Homebrew, skip fnm. Use when you want a stable, brew-only Node without an fnm shell hook. Mutually exclusive with `--fnm`.
+- `--fnm` — explicit default. LTS Node via fnm.
+- `--force-relink` — auto-`brew unlink node` if a non-pinned brew Node is detected. Safe for CI / non-interactive reruns; without it the script prompts before unlinking.
+- `--restore-globals FILE` — after Node is installed, reinstall every npm package named in `FILE` (one per line; blank lines and `# comments` ignored). Failures are reported but do not abort the bootstrap.
+
+#### Migrating a Mac that was already set up ad-hoc
+
+If a Mac already has `brew install node` from a prior ad-hoc setup, the Current-line Node it ships (e.g. v25 / v26) will shadow `node@${PIN}` / fnm and break `claude` and other native modules via `better-sqlite3` ABI mismatch. Recovery is mechanical:
+
+```bash
+# 1. Save your existing globals so you can restore them after switching Node.
+npm ls -g --depth=0 --json | jq -r '.dependencies | keys[]' > ~/dev-bootstrap-globals.txt
+
+# 2. Install the pinned LTS and force-link it.
+brew install node@22
+brew unlink node && brew link --force --overwrite node@22
+
+# 3. Reinstall the globals on the pinned Node.
+xargs -I{} npm install -g {}@latest < ~/dev-bootstrap-globals.txt
+
+# 4. Drop the old keg once `node -v` reports v22.
+brew uninstall node || true
+```
+
+Or do all of it in one bootstrap pass:
+
+```bash
+npm ls -g --depth=0 --json | jq -r '.dependencies | keys[]' > ~/dev-bootstrap-globals.txt
+bash macos/bootstrap.sh --brew-only --force-relink --restore-globals ~/dev-bootstrap-globals.txt
+```
+
+After install, future `node -v` drift to a non-pinned major triggers a one-line shell-startup warning from the appended zsh snippet with the exact recovery command inline.
+
 <p align="center">
   <img src="assets/architecture.png" alt="dev-bootstrap installation architecture" width="500">
 </p>
