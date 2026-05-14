@@ -49,7 +49,7 @@ shopt -u nullglob globstar
 
 if [[ ${#TEST_FILES[@]} -eq 0 ]]; then
   echo "no tests found under tests/" >&2
-  exit 0
+  exit 1
 fi
 
 for f in "${TEST_FILES[@]}"; do
@@ -61,7 +61,9 @@ done
 mapfile -t TESTS < <(declare -F | awk '/^declare -f test_/{print $3}')
 
 for t in "${TESTS[@]}"; do
-  if ( "$t" ); then
+  # set -e so any failed assert_* in the test body fails the subshell, even
+  # when later commands in the same test happen to succeed.
+  if ( set -e; "$t" ); then
     printf '  PASS  %s\n' "$t"
     PASS=$((PASS + 1))
   else
