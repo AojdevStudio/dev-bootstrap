@@ -29,8 +29,11 @@ assert_equals() {
 
 assert_success() {
   # Usage: assert_success <command...>
-  if ! "$@" >/dev/null 2>&1; then
-    printf '    expected success, got exit %d running: %s\n' "$?" "$*" >&2
+  local rc
+  "$@" >/dev/null 2>&1
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    printf '    expected success, got exit %d running: %s\n' "$rc" "$*" >&2
     return 1
   fi
 }
