@@ -1,16 +1,12 @@
 # shellcheck shell=bash
-# CLI flag parsing for macos/bootstrap.sh.
-# parse_flags sets the following globals (all initialized to defaults on every call):
-#   BREW_ONLY            "0" / "1"   — install node@22 via brew, skip fnm path
-#   USE_FNM              "0" / "1"   — install LTS via fnm (default mode)
-#   FORCE_RELINK         "0" / "1"   — non-interactive remediation of pre-existing brew Node
-#   RESTORE_GLOBALS_FILE path        — file of npm package names to reinstall (or empty)
-# Returns 0 on success, 1 on usage error (unknown flag, missing arg, mutex violation,
-# or --restore-globals pointing at a missing file).
+# parse_flags sets these globals (initialized on every call):
+#   BREW_ONLY            0 / 1   — install node@<pin> via brew, skip fnm path
+#   FORCE_RELINK         0 / 1   — non-interactive remediation of pre-existing brew Node
+#   RESTORE_GLOBALS_FILE path    — file of npm package names to reinstall (or empty)
+# Returns 0 on success, 1 on usage error, 2 on --help.
 
 parse_flags() {
   BREW_ONLY=0
-  USE_FNM=1
   FORCE_RELINK=0
   RESTORE_GLOBALS_FILE=""
 
@@ -21,12 +17,10 @@ parse_flags() {
     case "$1" in
       --brew-only)
         BREW_ONLY=1
-        USE_FNM=0
         brew_only_explicit=1
         ;;
       --fnm)
         BREW_ONLY=0
-        USE_FNM=1
         fnm_explicit=1
         ;;
       --force-relink)
@@ -48,7 +42,7 @@ parse_flags() {
         cat <<'USAGE'
 Usage: macos/bootstrap.sh [options]
 
-  --brew-only             Install node@22 via Homebrew; skip fnm.
+  --brew-only             Install node@<pin> via Homebrew; skip fnm.
                           Mutually exclusive with --fnm.
   --fnm                   Install LTS Node via fnm (default).
                           Mutually exclusive with --brew-only.
@@ -71,7 +65,7 @@ USAGE
     shift
   done
 
-  if [[ "$brew_only_explicit" == "1" && "$fnm_explicit" == "1" ]]; then
+  if (( brew_only_explicit && fnm_explicit )); then
     echo "--brew-only and --fnm are mutually exclusive — pick one" >&2
     return 1
   fi

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # macOS bootstrap entrypoint
-# Installs: Xcode CLT, Homebrew, git, curl, fnm or node@22 (per --brew-only),
+# Installs: Xcode CLT, Homebrew, git, curl, fnm or node@<pin> (per --brew-only),
 #           uv (Python), bun, Claude Code, Codex CLI.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,7 +11,6 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Default flag state before parse_flags runs, so any helper that reads these
 # globals stays safe under `set -u` even if parse_flags is reordered later.
 BREW_ONLY=0
-USE_FNM=1
 FORCE_RELINK=0
 RESTORE_GLOBALS_FILE=""
 
@@ -69,11 +68,11 @@ ensure_snippet_in_zshrc_once() {
   } >> "$zshrc"
 }
 
-# Pre-flight ownership repair for Homebrew-touched paths that commonly cause
-# `compinit` prompts and `brew install` failures (rb_sysopen permission denied)
-# after ad-hoc setup. Runs read-only probes first; if any path is broken,
-# requests sudo once up front, then repairs only the broken paths.
+# Repair ownership of Homebrew-touched paths that cause `compinit` prompts
+# and `brew install` to fail with `rb_sysopen permission denied` after ad-hoc
+# setup. Sudo is requested once up front, only when something is broken.
 preflight_brew_paths() {
+  command -v brew >/dev/null 2>&1 || return 0
   local paths=(
     /usr/local/share/zsh
     /usr/local/share/zsh/site-functions
@@ -109,69 +108,75 @@ preflight_brew_paths() {
   fi
 }
 
-# Detect a pre-existing `brew install node` (Current-line node formula). If
-# present and non-matching the pin, either prompt to unlink (interactive) or
-# unlink unconditionally (--force-relink) so it doesn't shadow fnm/node@22.
+# Detect a pre-existing `brew install node` on a non-pinned major and either
+# prompt to unlink (interactive) or unlink unconditionally (--force-relink).
+# Empty `brew list --versions node` output means not installed.
 remediate_existing_brew_node() {
-  if ! command -v brew >/dev/null 2>&1; then
-    return 0
-  fi
-  if ! brew list --formula 2>/dev/null | grep -qx 'node'; then
-    return 0
-  fi
+  command -v brew >/dev/null 2>&1 || return 0
   local installed
   installed="$(brew list --versions node 2>/dev/null | awk '{print $2}')"
-  if [[ -z "$installed" ]]; then
-    return 0
-  fi
-  local major="${installed%%.*}"
-  if [[ "$major" == "$PINNED_NODE_LTS_MAJOR" ]]; then
+  [[ -n "$installed" ]] || return 0
+  if ! is_non_lts_node_version "v$installed" "$PINNED_NODE_LTS_MAJOR"; then
     return 0
   fi
   echo "Detected pre-existing brew Node v$installed (pin is v$PINNED_NODE_LTS_MAJOR)." >&2
-  _unlink_brew_node() {
-    if ! brew unlink node >/dev/null; then
-      echo "  brew unlink node failed. Resolve manually (brew lock contention? partial install?) and re-run." >&2
+  local proceed=0
+  if (( FORCE_RELINK )); then
+    echo "  --force-relink set: running brew unlink node..." >&2
+    proceed=1
+  else
+    local target
+    target="$( (( BREW_ONLY )) && echo "node@${PINNED_NODE_LTS_MAJOR}" || echo "fnm-managed Node" )"
+    echo "  This will shadow $target." >&2
+    printf "  Run 'brew unlink node' now? [y/N, 60s timeout] " >&2
+    local ans=""
+    if ! read -r -t 60 ans; then
+      echo >&2
+      echo "  Prompt timed out. Re-run with --force-relink or unlink manually." >&2
       exit 1
     fi
-  }
-  if [[ "${FORCE_RELINK:-0}" == "1" ]]; then
-    echo "  --force-relink set: running brew unlink node..." >&2
-    _unlink_brew_node
-    return 0
+    case "$ans" in
+      y|Y|yes) proceed=1 ;;
+      *)
+        echo "Aborting. Re-run with --force-relink or unlink manually." >&2
+        exit 1
+        ;;
+    esac
   fi
-  echo "  This will shadow $( [[ "${BREW_ONLY:-0}" == "1" ]] && echo "node@${PINNED_NODE_LTS_MAJOR}" || echo "fnm-managed Node" )." >&2
-  printf "  Run 'brew unlink node' now? [y/N, 60s timeout] " >&2
-  local ans=""
-  if ! read -r -t 60 ans; then
-    echo >&2
-    echo "  Prompt timed out. Re-run with --force-relink or unlink manually." >&2
+  if (( proceed )) && ! brew unlink node >/dev/null; then
+    echo "  brew unlink node failed. Resolve manually (brew lock contention? partial install?) and re-run." >&2
     exit 1
   fi
-  case "$ans" in
-    y|Y|yes)
-      _unlink_brew_node
-      ;;
-    *)
-      echo "Aborting. Re-run with --force-relink or unlink manually." >&2
-      exit 1
-      ;;
-  esac
 }
 
-# Apply a globals-restore list once Node is on PATH. Failures are reported but
-# do not abort the bootstrap; each failing install's stderr is preserved so the
-# user can diagnose registry / proxy / permission issues from the summary.
+# Apply a globals-restore list once Node is on PATH. Failures captured to a
+# tempfile (cleaned up via RETURN trap on any exit) and dumped in the summary
+# so registry / proxy / permission errors are diagnosable.
 restore_npm_globals() {
   local file="$1"
   [[ -f "$file" ]] || return 0
-  local installed=() skipped=() failed=()
+
   local failure_log
   failure_log="$(mktemp -t globals-restore.XXXXXX.log)"
+  # shellcheck disable=SC2064
+  trap "rm -f '$failure_log'" RETURN
+
+  # One npm fork to snapshot installed globals (then exact-line match per
+  # package) avoids N+1 cold Node starts on a long globals file. `--parseable`
+  # gives absolute paths; awk strips to bare names so `foo` doesn't match
+  # `foo-utilities` and `@scope/foo` works unchanged.
+  local installed_globals
+  installed_globals="$(
+    npm ls -g --depth=0 --parseable 2>/dev/null \
+      | awk -F'/node_modules/' 'NF>1 { print $NF }' \
+      | sort -u
+  )"
+
+  local installed=() skipped=() failed=()
   local pkg
   while IFS= read -r pkg; do
     [[ -n "$pkg" ]] || continue
-    if npm list -g --depth=0 "$pkg" >/dev/null 2>&1; then
+    if grep -qFx "$pkg" <<<"$installed_globals"; then
       skipped+=("$pkg")
       continue
     fi
@@ -182,18 +187,19 @@ restore_npm_globals() {
       printf -- '--- %s failed ---\n' "$pkg" >> "$failure_log"
     fi
   done < <(parse_globals_file "$file")
-  echo
-  echo "Globals restore summary:"
-  echo "  installed: ${#installed[@]} (${installed[*]:-none})"
-  echo "  skipped:   ${#skipped[@]} (${skipped[*]:-none})"
-  echo "  failed:    ${#failed[@]} (${failed[*]:-none})"
-  if [[ ${#failed[@]} -gt 0 ]]; then
+
+  {
     echo
-    echo "  Failure details ($failure_log):"
-    sed 's/^/    /' "$failure_log" >&2
-  else
-    rm -f "$failure_log"
-  fi
+    echo "Globals restore summary:"
+    echo "  installed: ${#installed[@]} (${installed[*]:-none})"
+    echo "  skipped:   ${#skipped[@]} (${skipped[*]:-none})"
+    echo "  failed:    ${#failed[@]} (${failed[*]:-none})"
+    if [[ ${#failed[@]} -gt 0 ]]; then
+      echo
+      echo "  Failure details:"
+      sed 's/^/    /' "$failure_log"
+    fi
+  } >&2
 }
 
 log "Preflight: Xcode Command Line Tools"
@@ -236,7 +242,9 @@ log "Terminal UX (lazygit, yazi)"
 brew list lazygit >/dev/null 2>&1 || brew install lazygit
 brew list yazi >/dev/null 2>&1 || brew install yazi
 
-if [[ "${BREW_ONLY:-0}" == "1" ]]; then
+SNIPPET="$REPO_ROOT/macos/zshrc.snippet.sh"
+
+if (( BREW_ONLY )); then
   log "Node via brew node@${PINNED_NODE_LTS_MAJOR} (Plan B, --brew-only)"
   brew list "node@${PINNED_NODE_LTS_MAJOR}" >/dev/null 2>&1 || brew install "node@${PINNED_NODE_LTS_MAJOR}"
   # Only re-link when something other than the pinned keg owns the current node binary,
@@ -245,32 +253,23 @@ if [[ "${BREW_ONLY:-0}" == "1" ]]; then
   if [[ "$active_node" != *"node@${PINNED_NODE_LTS_MAJOR}/"* ]]; then
     brew link --force --overwrite "node@${PINNED_NODE_LTS_MAJOR}"
   fi
-  SNIPPET="$REPO_ROOT/macos/zshrc.snippet.sh"
   ensure_snippet_in_zshrc_once "$SNIPPET"
-  require_cmd node
-  require_cmd npm
-  node -v
-  npm -v
 else
   log "Node via fnm"
   brew list fnm >/dev/null 2>&1 || brew install fnm
-
-  SNIPPET="$REPO_ROOT/macos/zshrc.snippet.sh"
   require_cmd fnm
   ensure_snippet_in_zshrc_once "$SNIPPET"
-
-  # shellcheck disable=SC2046
   if fnm env --use-on-cd >/dev/null 2>&1; then
     eval "$(fnm env --use-on-cd)"
   fi
-
   fnm install --lts
   fnm default lts-latest
-  require_cmd node
-  require_cmd npm
-  node -v
-  npm -v
 fi
+
+require_cmd node
+require_cmd npm
+node -v
+npm -v
 
 log "Python via uv"
 if ! command -v uv >/dev/null 2>&1; then

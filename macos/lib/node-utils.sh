@@ -1,14 +1,16 @@
 # shellcheck shell=bash
-# Pure helpers used by macos/bootstrap.sh and macos/zshrc.snippet.sh.
-# No side effects; safe to source from interactive shells.
+# Pure helpers for macos/bootstrap.sh.
 
+# Canonical pin for the LTS Node major. If you bump this, also update:
+#   - macos/zshrc.snippet.sh (DEV_BOOTSTRAP_PINNED_NODE_MAJOR default)
+#   - README.md "Migrating a Mac that was already set up ad-hoc" recipe
+#   - macos/bootstrap.sh log line referencing the pin
 PINNED_NODE_LTS_MAJOR="${PINNED_NODE_LTS_MAJOR:-22}"
 
 is_non_lts_node_version() {
-  # Returns 0 when the given Node version's major does not match the pinned
-  # LTS major. Returns 1 otherwise, including for malformed or empty input.
-  # Accepts "vX.Y.Z" or "X.Y.Z". Optional second arg overrides the pinned
-  # major (defaults to $PINNED_NODE_LTS_MAJOR, default 22).
+  # Returns 0 when the input version's major != pin. Accepts "vX.Y.Z" or "X.Y.Z".
+  # Returns 1 for the pinned major, empty input, or malformed input.
+  # Optional second arg overrides the pin.
   local raw="${1:-}"
   raw="${raw#v}"
   local major="${raw%%.*}"
@@ -19,10 +21,8 @@ is_non_lts_node_version() {
 }
 
 parse_globals_file() {
-  # Reads a globals-list file (one npm package name per line) and emits each
-  # name on stdout, skipping blank lines and stripping `#` comments (both
-  # whole-line comments and trailing comments). Returns 1 if the file is
-  # missing or no path was given.
+  # Emits each npm package name on stdout, skipping blank lines and stripping
+  # `#` comments (whole-line and trailing). Returns 1 if the file is missing.
   local file="${1:-}"
   [[ -n "$file" && -f "$file" ]] || return 1
   awk '

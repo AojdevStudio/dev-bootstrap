@@ -211,7 +211,7 @@ if (Get-Command fnm -ErrorAction SilentlyContinue) {
 # ----------------------------
 '@
 
-fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+EnsureFnmActivated
 
 # Idempotency: fnm install --lts is noisy on re-runs ("Installing Node vX.Y.Z"
 # immediately followed by "warning: Version already installed"). Skip it if any

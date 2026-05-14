@@ -8,11 +8,13 @@ if command -v fnm >/dev/null 2>&1; then
   eval "$(fnm env --use-on-cd)"
 fi
 
-# Non-LTS Node guard. Warns on shell startup when `node -v` is not on the
-# pinned LTS major (default 22). Catches both odd-major Current releases
+# Non-LTS Node drift warning. Catches both odd-major Current releases
 # (v23/v25/v27/v29) and even-but-Current drift (v26) that bit mbp13 and the
-# primary dev Mac on 2026-05-13. Override the pin by exporting
-# DEV_BOOTSTRAP_PINNED_NODE_MAJOR before this snippet runs.
+# primary dev Mac on 2026-05-13. The logic is inlined (not sourced from
+# macos/lib/node-utils.sh::is_non_lts_node_version) to avoid an extra file
+# read in every interactive shell startup — but the two MUST stay in sync.
+# If you change one, change the other. Override the pin by exporting
+# DEV_BOOTSTRAP_PINNED_NODE_MAJOR before this snippet runs (default 22).
 if command -v node >/dev/null 2>&1; then
   __dev_bootstrap_node_v="$(node -v 2>/dev/null || true)"
   __dev_bootstrap_pin="${DEV_BOOTSTRAP_PINNED_NODE_MAJOR:-22}"

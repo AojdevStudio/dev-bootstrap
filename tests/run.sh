@@ -43,6 +43,16 @@ assert_failure() {
   fi
 }
 
+make_globals_fixture() {
+  # Writes <content> (interpret \n, \t, etc.) to a tempfile and prints the path.
+  local content="$1"
+  local tmp
+  tmp="$(mktemp -t globals.XXXXXX)"
+  # shellcheck disable=SC2059
+  printf "$content" > "$tmp"
+  echo "$tmp"
+}
+
 shopt -s nullglob globstar
 TEST_FILES=( tests/**/*.test.sh )
 shopt -u nullglob globstar
