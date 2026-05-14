@@ -18,7 +18,7 @@ test_parse_globals_file_emits_each_package() {
   local got
   got="$(parse_globals_file "$f")"
   rm -f "$f"
-  assert_equals "$'@anthropic-ai/claude-code\n@openai/codex\npnpm'" "$got"
+  assert_equals $'@anthropic-ai/claude-code\n@openai/codex\npnpm' "$got"
 }
 
 test_parse_globals_file_skips_blank_lines() {
@@ -27,7 +27,7 @@ test_parse_globals_file_skips_blank_lines() {
   local got
   got="$(parse_globals_file "$f")"
   rm -f "$f"
-  assert_equals "$'pnpm\n@openai/codex'" "$got"
+  assert_equals $'pnpm\n@openai/codex' "$got"
 }
 
 test_parse_globals_file_skips_hash_comment_lines() {
@@ -45,7 +45,7 @@ test_parse_globals_file_strips_trailing_hash_comment() {
   local got
   got="$(parse_globals_file "$f")"
   rm -f "$f"
-  assert_equals "$'pnpm\n@openai/codex'" "$got"
+  assert_equals $'pnpm\n@openai/codex' "$got"
 }
 
 test_parse_globals_file_handles_scoped_packages_with_comments() {
@@ -55,7 +55,7 @@ test_parse_globals_file_handles_scoped_packages_with_comments() {
   local got
   got="$(parse_globals_file "$f")"
   rm -f "$f"
-  assert_equals "$'@anthropic-ai/claude-code\n@openai/codex@latest\n@scope/with-version@1.2.3'" "$got"
+  assert_equals $'@anthropic-ai/claude-code\n@openai/codex@latest\n@scope/with-version@1.2.3' "$got"
 }
 
 test_parse_globals_file_returns_nonzero_when_missing() {
