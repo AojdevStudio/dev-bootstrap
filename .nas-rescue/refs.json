@@ -1,0 +1,70 @@
+{
+  "source": "/volume1/projects/dev-bootstrap",
+  "original_head": "7a74a5604266e297c0995187de3603bacc97c3a6",
+  "original_refs": [
+    [
+      "refs/heads/linux-server-bootstrap",
+      "7a74a5604266e297c0995187de3603bacc97c3a6",
+      "commit"
+    ],
+    [
+      "refs/heads/main",
+      "20486aa406ed779fd68a31683f3d5395478f1ffc",
+      "commit"
+    ],
+    [
+      "refs/remotes/origin/HEAD",
+      "20486aa406ed779fd68a31683f3d5395478f1ffc",
+      "commit"
+    ],
+    [
+      "refs/remotes/origin/linux-server-bootstrap",
+      "7a74a5604266e297c0995187de3603bacc97c3a6",
+      "commit"
+    ],
+    [
+      "refs/remotes/origin/main",
+      "20486aa406ed779fd68a31683f3d5395478f1ffc",
+      "commit"
+    ],
+    [
+      "refs/tags/v1.0.0",
+      "c7b53491f9afecac16d33f896c7b50a714b2543b",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.1.0",
+      "9e066c789eb4e20691eb8d44ae8b79bdbee52383",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.1.1",
+      "5c1986185392dccd29df153c709ee57d0fa357a8",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.1.2",
+      "bb0912c6497787f278652fec0061ea53102bd527",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.2.0",
+      "74d79eb1c584327b5ae06073946336bcbae791d1",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.3.0",
+      "0207b68f856ac20d1c66807c1d0f470615922104",
+      "tag"
+    ],
+    [
+      "refs/tags/v1.4.0",
+      "9920b5ac5b6b3d33280705b57137dc94c88e81c5",
+      "tag"
+    ]
+  ],
+  "stashes": [],
+  "excluded_new_files": [
+    ".DS_Store"
+  ]
+}

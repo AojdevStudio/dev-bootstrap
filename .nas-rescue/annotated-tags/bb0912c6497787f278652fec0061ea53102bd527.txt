@@ -1,0 +1,6 @@
+object 13719f5792f8860dba739b939a2722e4b2e51f49
+type commit
+tag v1.1.2
+tagger AOJDevStudio <admin@unifiedental.com> 1776369073 -0500
+
+v1.1.2 — WSL iex invocation + reboot detection fixes

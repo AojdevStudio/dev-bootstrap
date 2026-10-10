@@ -1,0 +1,6 @@
+object 5f142e89f7d59ead6156a755b86016912341f226
+type commit
+tag v1.1.0
+tagger AOJDevStudio <admin@unifiedental.com> 1776365024 -0500
+
+Release v1.1.0 — macOS bootstrap + Windows reliability fixes

@@ -1,0 +1,6 @@
+object 1a09fd76e9a75d59212fbdaa371c590123c73e99
+type commit
+tag v1.2.0
+tagger AOJDevStudio <admin@unifiedental.com> 1776369339 -0500
+
+v1.2.0 — Claude Code via native winget binary

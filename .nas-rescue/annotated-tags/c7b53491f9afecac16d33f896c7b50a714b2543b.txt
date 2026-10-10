@@ -1,0 +1,17 @@
+object 5c1da99a6c2dc62ed427966fb61920775e8916bf
+type commit
+tag v1.0.0
+tagger AOJDevStudio <admin@unifiedental.com> 1770235831 -0600
+
+Release v1.0.0
+
+Initial stable release of dev-bootstrap - a Windows developer environment
+bootstrap tool that automates installation and configuration of essential
+development tools.
+
+Highlights:
+- Automated PowerShell bootstrap script (bootstrap.ps1)
+- WSL setup script for Linux environment
+- Git, Node.js (fnm), Python, VS Code, Docker Desktop, Windows Terminal
+- Comprehensive documentation and architecture overview
+- AI agent configuration for assisted development
